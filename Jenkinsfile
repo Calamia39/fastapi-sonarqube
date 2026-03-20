@@ -14,6 +14,18 @@ pipeline {
             }
         }
         
+        stage('Setup Python') {
+            steps {
+                sh '''
+                    python3 -m venv venv
+                    . venv/bin/activate
+                    pip install --upgrade pip
+                    pip install -r requirements.txt
+                    pip install pytest pytest-cov pylint bandit httpx
+                '''
+            }
+        }
+        
         stage('Unit Tests with Coverage') {
             steps {
                 sh '''
