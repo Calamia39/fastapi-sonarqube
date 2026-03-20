@@ -101,11 +101,18 @@ pipeline {
     
     post {
         always {
-            junit 'pytest-report.xml'
+            // Publicar resultados de tests
+            junit testResults: 'pytest-report.xml', allowEmptyResults: true
+            
+            // Publicar reporte de cobertura HTML
             publishHTML([
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                keepAll: true,
                 reportDir: 'htmlcov',
                 reportFiles: 'index.html',
-                reportName: 'Coverage Report'
+                reportName: 'Coverage Report',
+                reportTitles: 'Code Coverage'
             ])
         }
         success {
@@ -113,6 +120,9 @@ pipeline {
         }
         failure {
             echo '❌ Pipeline falló - Revisar SonarQube Quality Gate'
+        }
+        cleanup {
+            cleanWs()
         }
     }
 }
