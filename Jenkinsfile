@@ -4,6 +4,7 @@ pipeline {
     environment {
         SONAR_HOST = "http://192.168.1.206:9000"
         SCANNER_HOME = tool 'SonarScanner'
+        PYTHONPATH = "${WORKSPACE}"
     }
     
     stages {
@@ -29,6 +30,7 @@ pipeline {
             steps {
                 sh '''
                     . venv/bin/activate
+                    export PYTHONPATH="${PYTHONPATH}:${WORKSPACE}"
                     pytest tests/ \
                         --cov=app \
                         --cov-report=xml:coverage.xml \
@@ -44,6 +46,7 @@ pipeline {
                     steps {
                         sh '''
                             . venv/bin/activate
+                            export PYTHONPATH="${PYTHONPATH}:${WORKSPACE}"
                             pylint app/ --output-format=parseable --reports=no > pylint-report.txt || true
                         '''
                     }
@@ -52,6 +55,7 @@ pipeline {
                     steps {
                         sh '''
                             . venv/bin/activate
+                            export PYTHONPATH="${PYTHONPATH}:${WORKSPACE}"
                             bandit -r app/ -f json -o bandit-report.json || true
                         '''
                     }
@@ -102,10 +106,7 @@ pipeline {
     
     post {
         always {
-            // Publicar resultados de tests
             junit testResults: 'pytest-report.xml', allowEmptyResults: true
-            
-            // Publicar reporte de cobertura HTML
             publishHTML([
                 allowMissing: false,
                 alwaysLinkToLastBuild: true,
@@ -120,7 +121,7 @@ pipeline {
             echo '✅ Pipeline completado exitosamente'
         }
         failure {
-            echo '❌ Pipeline falló - Revisar SonarQube Quality Gate'
+            echo '❌ Pipeline falló - Revisar logs'
         }
         cleanup {
             cleanWs()
